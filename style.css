@@ -13,6 +13,24 @@ body {
     justify-content: flex-end;
     background-color: blue;
     margin-bottom: 20px;
+    position: relative;
+}
+
+.cart {
+    position: absolute;
+    border: 1px solid #000;
+    width: 250px;
+    right: 400px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.hidden {
+    display: none;
 }
 
 .goods-list {

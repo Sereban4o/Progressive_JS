@@ -1,13 +1,41 @@
+const API_URL = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
+
+const cartEl = document.querySelector('.cart');
+document.querySelector('.cart-button')
+    .addEventListener('click', () => {
+        cartEl.classList.toggle('hidden');
+    });
+
+
+function makeGETRequest(url) {
+    return new Promise(function (resolve, reject) {
+        var xhr;
+        if (window.XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        } else if (window.ActiveXObject) {
+            xhr = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                resolve(xhr.responseText);
+            }
+        }
+        xhr.open('GET', url, true);
+        xhr.send();
+    });
+}
+
+
 class GoodsItem {
-    constructor(title, price, image) {
-        this.title = title;
+    constructor(product_name, price, id_product) {
+        this.product_name = product_name;
         this.price = price;
-        this.image = image;
+        this.id_product = id_product;
     }
     render() {
         return `<div
-class="goods-item"><h3 class="goods__heading">${this.title}</h3>\
-<img class="goods__img" src=${this.image} alt="Товар">\
+class="goods-item" data-id=${this.id_product} data-price=${this.price}>\
+<h3 class="goods__heading">${this.product_name}</h3>\
 <p class="goods__price">${this.price} руб.</p><hr class="goods__hr">\
     <button class="goods__add" type="button">Добавить</button></div>`;
     }
@@ -17,50 +45,19 @@ class GoodsList {
     constructor() {
         this.goods = [];
     }
-    fetchGoods() {
-        this.goods = [
-            {
-                title: 'Shirt', price: 150,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Socks', price: 50,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Jacket', price: 350,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Shoes', price: 250,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Shirt', price: 150,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Socks', price: 50,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Jacket', price: 350,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Shoes', price: 250,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-            {
-                title: 'Shoes', price: 250,
-                image: 'https://images.freeimages.com/images/premium/previews/7344/734471-t-shirt.jpg'
-            },
-        ];
+    async fetchGoods(url) {
+
+        await makeGETRequest(url)
+            .then(responseText => {
+                this.goods = JSON.parse(responseText);
+                return this.goods;
+            })
+
     }
     render() {
         let listHtml = '';
         this.goods.forEach(good => {
-            const goodItem = new GoodsItem(good.title, good.price, good.image);
+            const goodItem = new GoodsItem(good.product_name, good.price, good.id_product);
             listHtml += goodItem.render();
         });
         document.querySelector('.goods-list').innerHTML = listHtml;
@@ -74,18 +71,86 @@ class GoodsList {
     }
 
 }
-
-const list = new GoodsList();
-list.fetchGoods();
-list.render();
-
 ///Корзина товаров
 
 class CartList extends GoodsList {
+    constructor() {
+        super();
+        this.colio = 0;
+        this.sum = 0;
+    }
     removeGood() { }
-    addGood() { }
-    addColio() { }
+    addGood(id_product, price, quantity) {
+        if (!(this.goods.contents.find(item => item.id_product === id_product))) {
+            this.goods[id_product] = { id_product, price, quantity: 0 };
+        } else {
+            this.addColio(id_product)
+        }
+    }
+    addColio(id_product) {
+        const good = this.goods.contents.find(item => item.id_product === id_product);
+        good.quantity += 1;
+        this.colio += 1;
+        this.sum += good.price;
+        this.renderFooter();
+    }
+    render() {
+        let listHtml = '';
+        this.colio = this.goods.countGoods;
+        this.sum = this.goods.amount;
+        this.goods.contents.forEach(good => {
+            const goodItem = new CartItem(good.product_name, good.price, good.id_product, good.quantity);
+            listHtml += goodItem.render();
+        });
+        listHtml += this.renderFooter();
+        document.querySelector('.cart').innerHTML = listHtml;
+
+    }
+    renderFooter() {
+        return `<div
+class="cart-footer">
+<p class="footer">Итого: ${this.colio} на сумму ${this.sum}</p>
+</div>`;
+    }
 }
 class CartItem extends GoodsItem {
-    render() { }//верстка корзины отличная от списка товаров на странице
+    constructor(product_name, price, id_product, count) {
+        super(product_name, price, id_product);
+        this.count = count;
+    }
+
+    render() {
+        return `<div
+class="cart-item" data-id=${this.id_product} data-price=${this.price} \
+data-count=${this.count}><h3 class="cart__heading">${this.product_name}</h3>\
+<p class="cart__price">${this.price} руб.</p>
+</div>`;
+    }
 }
+
+
+const list = new GoodsList();
+list.fetchGoods(`${API_URL}/catalogData.json`).then(() => {
+    list.render()
+})
+    ;
+
+const cart = new CartList();
+cart.fetchGoods(`${API_URL}/getBasket.json`).then(() => {
+    cart.render()
+})
+    .then(() => {
+        document.querySelector('.goods-list')
+            .addEventListener('click', event => {
+                if (!event.target.closest('.goods__add')) {
+                    return;
+                }
+                const productEl = event.target.parentNode.dataset;
+                const id_product = +productEl.id;
+                const price = +productEl.price;
+                cart.addGood(id_product, price, 1);
+
+            });
+    }
+    );
+
