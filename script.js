@@ -79,25 +79,41 @@ class CartList extends GoodsList {
         this.colio = 0;
         this.sum = 0;
     }
-    removeGood() { }
+    async fetchGoods(url) {
+
+        await makeGETRequest(url)
+            .then(responseText => {
+                this.goods = JSON.parse(responseText);
+                this.colio = this.goods.countGoods;
+                this.sum = this.goods.amount;
+                return this.goods;
+            })
+
+    }
+    removeGood() {
+        el = this.goods.contents.find(item => item.id_product === id_product);
+        delete this.goods[el];
+        this.render();
+
+
+    }
     addGood(id_product, price, quantity) {
         if (!(this.goods.contents.find(item => item.id_product === id_product))) {
             this.goods[id_product] = { id_product, price, quantity: 0 };
         } else {
             this.addColio(id_product)
         }
+        this.render();
     }
     addColio(id_product) {
         const good = this.goods.contents.find(item => item.id_product === id_product);
         good.quantity += 1;
         this.colio += 1;
         this.sum += good.price;
-        this.renderFooter();
     }
     render() {
         let listHtml = '';
-        this.colio = this.goods.countGoods;
-        this.sum = this.goods.amount;
+
         this.goods.contents.forEach(good => {
             const goodItem = new CartItem(good.product_name, good.price, good.id_product, good.quantity);
             listHtml += goodItem.render();
@@ -124,6 +140,7 @@ class CartItem extends GoodsItem {
 class="cart-item" data-id=${this.id_product} data-price=${this.price} \
 data-count=${this.count}><h3 class="cart__heading">${this.product_name}</h3>\
 <p class="cart__price">${this.price} руб.</p>
+<p class="cart__count">${this.count} шт.</p>
 </div>`;
     }
 }
