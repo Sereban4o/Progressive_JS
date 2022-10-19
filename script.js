@@ -44,20 +44,30 @@ class="goods-item" data-id=${this.id_product} data-price=${this.price}>\
 class GoodsList {
     constructor() {
         this.goods = [];
+        this.filteredGoods = [];
     }
     async fetchGoods(url) {
 
         await makeGETRequest(url)
             .then(responseText => {
                 this.goods = JSON.parse(responseText);
+                this.filteredGoods = JSON.parse(responseText);
                 return this.goods;
             })
 
     }
+    filterGoods(value) {
+        const regexp = new RegExp(value, 'i');
+        this.filteredGoods = this.goods.filter(good =>
+            regexp.test(good.product_name));
+        this.render();
+
+    }
+
     render() {
         let listHtml = '';
-        this.goods.forEach(good => {
-            const goodItem = new GoodsItem(good.product_name, good.price, good.id_product);
+        this.filteredGoods.forEach(good => {
+            const goodItem = new GoodsItem(good.product_name, good.price);
             listHtml += goodItem.render();
         });
         document.querySelector('.goods-list').innerHTML = listHtml;
@@ -148,13 +158,18 @@ data-count=${this.count}><h3 class="cart__heading">${this.product_name}</h3>\
 
 const list = new GoodsList();
 list.fetchGoods(`${API_URL}/catalogData.json`).then(() => {
-    list.render()
+    list.render();
+    document.querySelector('.search-button').addEventListener('click', (e) => {
+        const value = document.querySelector('.goods-search').value;
+        list.filterGoods(value);
+    });
 })
     ;
 
 const cart = new CartList();
 cart.fetchGoods(`${API_URL}/getBasket.json`).then(() => {
-    cart.render()
+    cart.render();
+
 })
     .then(() => {
         document.querySelector('.goods-list')
