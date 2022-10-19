@@ -67,7 +67,7 @@ class GoodsList {
     render() {
         let listHtml = '';
         this.filteredGoods.forEach(good => {
-            const goodItem = new GoodsItem(good.product_name, good.price);
+            const goodItem = new GoodsItem(good.product_name, good.price, good.id_product);
             listHtml += goodItem.render();
         });
         document.querySelector('.goods-list').innerHTML = listHtml;
