@@ -31,6 +31,7 @@ Vue.component('cart', {
         },
         remove(product) {
             let find = this.cartItems.find(el => el.id_product === product.id_product);
+
             if (find.quantity > 1) {
                 this.$parent.putJson(`/api/cart/${find.id_product}`, { quantity: -1 })
                     .then(data => {
@@ -39,7 +40,14 @@ Vue.component('cart', {
                         }
                     })
             } else {
-                this.cartItems.splice(indexOf(find), 1);
+                this.$parent.delJson(`/api/cart/${find.id_product}`, product)
+                    .then(data => {
+                        if (data.result) {
+                            this.cartItems.splice(this.cartItems.indexOf(product), 1);
+                        } else {
+                            console.log('error');
+                        }
+                    })
             }
         },
     },
@@ -66,8 +74,12 @@ Vue.component('cart', {
                 :img="item.img"
                 @remove="remove">
                 </cart-item>
+                <div>
+<a href="cart.html" class="cart__enter">Перейти в корзину</a>
+</div>
             </div>
-</div>`
+</div>
+`
 });
 Vue.component('cart-item', {
     props: ['cartItem', 'img'],

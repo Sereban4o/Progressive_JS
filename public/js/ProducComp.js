@@ -55,4 +55,78 @@ Vue.component('product', {
 </div>
 
     `
-})
+});
+
+Vue.component('products_info', {
+    data() {
+        return {
+            catalogUrl: '/catalogData.json',
+            products: [],
+            filtered: []
+        }
+    },
+    methods: {
+        filter(value) {
+            let regexp = new RegExp(value, 'i');
+            this.filtered = this.products.filter(el => regexp.test(el.product_name));
+        }
+    },
+    mounted() {
+        this.$parent.getJson(`/api/products`)
+            .then(data => {
+                i = 1;
+                for (let el of data) {
+                    if (i < 4) {
+                        this.products.push(el);
+                        this.filtered.push(el);
+                        i++;
+                    }
+                }
+            });
+    },
+
+    template: `
+
+    
+        <div class="products__items">
+            <product v-for="item of filtered" :key="item.id_product" :img="item.img" :product="item"></product>
+        </div>
+    `
+});
+
+Vue.component('products_main', {
+    data() {
+        return {
+            catalogUrl: '/catalogData.json',
+            products: [],
+            filtered: []
+        }
+    },
+    methods: {
+        filter(value) {
+            let regexp = new RegExp(value, 'i');
+            this.filtered = this.products.filter(el => regexp.test(el.product_name));
+        }
+    },
+    mounted() {
+        this.$parent.getJson(`/api/products`)
+            .then(data => {
+                i = 1;
+                for (let el of data) {
+                    if (i < 7) {
+                        this.products.push(el);
+                        this.filtered.push(el);
+                        i++;
+                    }
+                }
+            });
+    },
+
+    template: `
+
+    
+        <div class="products__items">
+            <product v-for="item of filtered" :key="item.id_product" :img="item.img" :product="item"></product>
+        </div>
+    `
+});
